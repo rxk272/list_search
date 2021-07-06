@@ -1,0 +1,174 @@
+{% extends "sidebar_app/base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+	{% block content %}
+	<link rel='stylesheet' type='text/css' href="{% static 'css/font-awesome.css' %}" />
+	<script src="{% static 'sidebar_app/extensions/js/jquery.js' %}"></script>
+	<script src="{% static 'sidebar_app/extensions/js/jquery3.5.1.min.js' %}"></script>
+<style>
+.form-inline .form-control {
+    display: inline-block;
+    width: 400px;
+    vertical-align: middle;
+}
+
+</style>
+<body>
+<div class="card" style="top:50;position:absolute;width:100%;">
+	<h4 class="card-header">Requirements</h4>
+	<div class="card-body">
+		<div class="col-lg-12">
+			{% csrf_token %}
+			<br>
+			<div class="form-inline">
+				<div class="col-md-12 form-group">
+					<label class="col-sm-2 col-form-label" for="drop1">Jobname</label>
+					<input type="text" class="form-control" name="drop1" id="drop1" value="">
+				</div>
+			</div>
+			<br>
+			<div class="form-inline">
+				<div class="col-xs-5">
+            		<input type="text" class="form-control" id="searchInput" placeholder="Search" style="width:300px;margin-left:70px;" />
+				</div>
+			</div>
+			<br>
+			<div class="form-inline">
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<div class="col-xs-5">
+						 <select multiple="multiple" id="select1" class="form-control" style="width:300px;height:260px;">
+							{% for i in data %}
+							<option class="name" value="{{i.serverName}}">{{i.serverName}}</option>
+							{% endfor %}
+						</select>
+					</div>
+					&nbsp;&nbsp;&nbsp;
+					<div class="col-xs-2">
+						<button type="button" id="add_all" class="btn btn-default btn-block"><i class="fa fa-forward"></i></button>
+						<button type="button" id="add" class="btn btn-default btn-block"><i class="fa fa-chevron-right"></i></button>
+						<button type="button" id="remove" class="btn btn-default btn-block"><i class="fa fa-chevron-left"></i></button>
+						<button type="button" id="remove_all" class="btn btn-default btn-block"><i class="fa fa-backward"></i></button>
+						<button onclick="clearSelected();" type="button" id="unselect" class="btn btn-warning btn-block">Reset</button>
+					</div>
+					&nbsp;&nbsp;&nbsp;
+					<div class="col-xs-5" >
+						 <select multiple="multiple" id="select2" style="width: 300px;height:260px;"></select>
+					</div>
+				</div>
+			<p id="error">{{error}}</p>
+			<input type="submit" onclick="saveHandler()" id="btn" class="btn btn-success col-sm-2" style="margin-left:40%;height:45px;" value="SUBMIT"/>
+		</div>
+	</div>
+</div>
+<script>
+$("#unselect").click(function () {
+    $("#select1 > option").attr("selected",false);
+});
+
+</script>
+<script>
+	$(function () {
+		$('#add').click(function () {
+			let $options = $('#select1 option:selected');
+			$options.appendTo("#select2");
+		});
+		$('#add_all').click(function () {
+			let $options = $('#select1 option');
+			$options.appendTo("#select2");
+		});
+		$('#select1').dblclick(function () {
+			let $option = $('option:selected',this);
+			$option.appendTo('#select2');
+		});
+		$("#remove").click(function () {
+			let $options = $('#select2 option:selected');
+			$options.appendTo("#select1");
+		});
+		$("#remove_all").click(function () {
+			let $options = $('#select2 option');
+			$options.appendTo('#select1');
+		});
+		$('#select2').dblclick(function () {
+			let $option = $('option:selected');
+			$option.appendTo("#select1");
+		});
+	});
+</script>
+
+<script>
+/* Search Bar */
+document.querySelector('#searchInput').addEventListener('keyup', function(e) {
+        // UI Element
+        let namesLI = document.getElementsByClassName('name');
+
+        // Get Search Query
+        let searchQuery = searchInput.value.toLowerCase();
+
+        // Search Compare & Display
+        for (let index = 0; index < namesLI.length; index++) {
+                const name = namesLI[index].textContent.toLowerCase();
+
+                if (name.includes(searchQuery)) {
+                        namesLI[index].style.display = 'block';
+                } else {
+                        namesLI[index].style.display = 'none';
+                }
+        }
+});
+</script>
+<script>
+    window.onmousedown = function (e) {
+    var el = e.target;
+    if (el.tagName.toLowerCase() == 'option' && el.parentNode.hasAttribute('multiple')) {
+        e.preventDefault();
+
+        // toggle selection
+        if (el.hasAttribute('selected')) el.removeAttribute('selected');
+        else el.setAttribute('selected', '');
+
+        // hack to correct buggy behavior
+        var select = el.parentNode.cloneNode(true);
+        el.parentNode.parentNode.replaceChild(select, el.parentNode);
+    }
+}
+</script>
+<script>
+    function saveHandler(){
+    var d1=document.getElementById("drop1").value;
+    var d2=document.getElementById("select2").value;
+    if(d1=="" || d2=="" ){
+    document.getElementById("error").innerHTML = "Please Select All Values";
+    }
+    else{
+    document.getElementById("error").innerHTML = "";
+    var select1 = document.getElementById("select2");
+    var selected1 = [];
+    for (var i = 0; i < select1.length; i++) {
+        if (select1.options[i].selected)
+        selected1.push(select1.options[i].value);
+    }
+    console.log(selected1);
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log(this.responseText);
+      window.alert(this.responseText);
+      location.reload(true);
+    }
+  };
+  xhttp.open("POST","", true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send("job="+d1+"&&hostname="+selected1);
+    }
+    console.log(selected1);
+    }
+</script>
+
+</body>
+{% endblock content %}
+</head>
+</html>
+
+
